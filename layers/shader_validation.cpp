@@ -1550,7 +1550,7 @@ bool PreCallValidateCreateShaderModule(layer_data *dev_data, VkShaderModuleCreat
                         pCreateInfo->codeSize, validation_error_map[VALIDATION_ERROR_12a00ac0]);
     } else {
         auto cache = GetValidationCacheInfo(pCreateInfo);
-        uint32_t hash;
+        uint32_t hash = 0;
         if (cache) {
             hash = ValidationCache::MakeShaderHash(pCreateInfo);
             if (cache->Contains(hash))
