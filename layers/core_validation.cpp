@@ -2731,6 +2731,7 @@ static bool PreCallValidateQueueSubmit(layer_data *dev_data, VkQueue queue, uint
                     }
                 } else {  // We have a pre-check conflict so have to replay Cmds to verify if conflict is real or cleared by a
                           // inter-CB synch
+                    submit_cmds.clear(); // Should always start replay with an empty cmd vector
                     // This is the slow path
                     // We have to replay so copy cmd sequence up to this point into local vector
                     //  Then mark seq replay start & seq replay end indices which are seq cmds between conflicting mem accesses that
