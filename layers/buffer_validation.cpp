@@ -505,7 +505,7 @@ bool ValidateBarriersToImages(layer_data *device_data, GLOBAL_CB_NODE const *cb_
             }
         }
 
-        VkImageCreateInfo *image_create_info = &(GetImageState(device_data, img_barrier->image)->createInfo);
+        auto image_create_info = GetImageState(device_data, img_barrier->image)->createInfo.ptr();
         // For a Depth/Stencil image both aspects MUST be set
         if (FormatIsDepthAndStencil(image_create_info->format)) {
             auto const aspect_mask = img_barrier->subresourceRange.aspectMask;
@@ -547,7 +547,7 @@ void TransitionImageLayouts(layer_data *device_data, VkCommandBuffer cmdBuffer, 
         auto mem_barrier = &pImgMemBarriers[i];
         if (!mem_barrier) continue;
 
-        VkImageCreateInfo *image_create_info = &(GetImageState(device_data, mem_barrier->image)->createInfo);
+        auto image_create_info = GetImageState(device_data, mem_barrier->image)->createInfo.ptr();
         uint32_t level_count = ResolveRemainingLevels(&mem_barrier->subresourceRange, image_create_info->mipLevels);
         uint32_t layer_count = ResolveRemainingLayers(&mem_barrier->subresourceRange, image_create_info->arrayLayers);
 
@@ -1006,7 +1006,7 @@ bool VerifyClearImageLayout(layer_data *device_data, GLOBAL_CB_NODE *cb_node, IM
 
 void RecordClearImageLayout(layer_data *device_data, GLOBAL_CB_NODE *cb_node, VkImage image, VkImageSubresourceRange range,
                             VkImageLayout dest_image_layout) {
-    VkImageCreateInfo *image_create_info = &(GetImageState(device_data, image)->createInfo);
+    auto image_create_info = GetImageState(device_data, image)->createInfo.ptr();
     uint32_t level_count = ResolveRemainingLevels(&range, image_create_info->mipLevels);
     uint32_t layer_count = ResolveRemainingLayers(&range, image_create_info->arrayLayers);
 
@@ -3824,7 +3824,7 @@ bool ValidateBufferImageCopyData(const debug_report_data *report_data, uint32_t 
 static bool ValidateImageBounds(const debug_report_data *report_data, const IMAGE_STATE *image_state, const uint32_t regionCount,
                                 const VkBufferImageCopy *pRegions, const char *func_name, UNIQUE_VALIDATION_ERROR_CODE msg_code) {
     bool skip = false;
-    const VkImageCreateInfo *image_info = &(image_state->createInfo);
+    auto image_info = image_state->createInfo.ptr();
 
     for (uint32_t i = 0; i < regionCount; i++) {
         VkExtent3D extent = pRegions[i].imageExtent;
