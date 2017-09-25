@@ -364,7 +364,7 @@ struct demo {
     uint32_t last_late_id;   // 0 if no late images
 
     VkInstance inst;
-    VkPhysicalDevice gpu;
+    VkPhysicalDevice gpus[VK_MAX_DEVICE_GROUP_SIZE_KHX];
     VkDevice device;
     VkQueue graphics_queue;
     VkQueue present_queue;
@@ -373,7 +373,7 @@ struct demo {
     VkSemaphore image_acquired_semaphores[FRAME_LAG];
     VkSemaphore draw_complete_semaphores[FRAME_LAG];
     VkSemaphore image_ownership_semaphores[FRAME_LAG];
-    VkPhysicalDeviceProperties gpu_props;
+    VkPhysicalDeviceGroupPropertiesKHX gpu_props;
     VkQueueFamilyProperties *queue_props;
     VkPhysicalDeviceMemoryProperties memory_properties;
 
@@ -393,7 +393,7 @@ struct demo {
     PFN_vkCreateSwapchainKHR fpCreateSwapchainKHR;
     PFN_vkDestroySwapchainKHR fpDestroySwapchainKHR;
     PFN_vkGetSwapchainImagesKHR fpGetSwapchainImagesKHR;
-    PFN_vkAcquireNextImageKHR fpAcquireNextImageKHR;
+    PFN_vkAcquireNextImage2KHX fpAcquireNextImage2KHX;
     PFN_vkQueuePresentKHR fpQueuePresentKHR;
     PFN_vkGetRefreshCycleDurationGOOGLE fpGetRefreshCycleDurationGOOGLE;
     PFN_vkGetPastPresentationTimingGOOGLE fpGetPastPresentationTimingGOOGLE;
@@ -3288,7 +3288,7 @@ static void demo_init_vk(struct demo *demo) {
         inst_info.pNext = &dbgCreateInfoTemp;
     }
 
-    uint32_t gpu_count;
+    uint32_t group_count;
 
     err = vkCreateInstance(&inst_info, NULL, &demo->inst);
     if (err == VK_ERROR_INCOMPATIBLE_DRIVER) {
@@ -3308,15 +3308,15 @@ static void demo_init_vk(struct demo *demo) {
     }
 
     /* Make initial call to query gpu_count, then second call for gpu info*/
-    err = vkEnumeratePhysicalDevices(demo->inst, &gpu_count, NULL);
-    assert(!err && gpu_count > 0);
+    err = vkEnumeratePhysicalDeviceGroupsKHX(demo->inst, &group_count, NULL);
+    assert(!err && group_count > 0);
 
-    if (gpu_count > 0) {
-        VkPhysicalDevice *physical_devices = malloc(sizeof(VkPhysicalDevice) * gpu_count);
-        err = vkEnumeratePhysicalDevices(demo->inst, &gpu_count, physical_devices);
+    if (group_count > 0) {
+        VkPhysicalDevice *physical_devices = malloc(sizeof(VkPhysicalDevice) * group_count);
+        err = vkEnumeratePhysicalDeviceGroupsKHX(demo->inst, &group_count, physical_devices);
         assert(!err);
         /* For cube demo we just grab the first physical device */
-        demo->gpu = physical_devices[0];
+        demo->gpus = physical_devices;
         free(physical_devices);
     } else {
         ERR_EXIT("vkEnumeratePhysicalDevices reported zero accessible devices.\n\n"
